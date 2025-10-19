@@ -3,11 +3,15 @@
         <p class="title">Gator Quest</p>
         <i class="pi pi-user profile-icon" (click)="onProfileClick()"></i>
     </header>
-    <div class="component menu-container">
-        <app-menu></app-menu>
+    <div *ngIf="currentState === 'menu'" class="component menu-container">
+        <app-menu (startGameEvent) = onStart()>
+
+        </app-menu>
     </div>
     <div class="component textbox-container">
-        <app-text-box></app-text-box>
+        <app-text-box>
+            
+        </app-text-box>
     </div>
 </div>
 

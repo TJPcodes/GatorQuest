@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, Output, EventEmitter } from '@angular/core';
 
 @Component({
   selector: 'app-menu',
@@ -7,5 +7,11 @@ import { Component } from '@angular/core';
   styleUrl: './menu.css'
 })
 export class Menu {
+
+  @Output() startGameEvent = new EventEmitter<void>();
+
+  onStartClick() {
+    this.startGameEvent.emit();
+  }
 
 }
