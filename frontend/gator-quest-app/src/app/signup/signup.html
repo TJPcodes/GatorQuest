@@ -1,0 +1,42 @@
+<div class="signup-container">
+    <h1>Gator Quest Account Creation</h1>
+    <form (ngSubmit)="createdAccount()">
+        <input
+        id="firstname"
+        type="text"
+        pInputText
+        [(ngModel)]="firstname"
+        name="firstname"
+        placeholder=" Enter your firstname"
+        required
+      />
+      <input
+        id="lastname"
+        type="text"
+        pInputText
+        [(ngModel)]="lastname"
+        name="lastname"
+        placeholder=" Enter your lastname"
+        required
+      />
+      <input
+        id="username"
+        type="text"
+        pInputText
+        [(ngModel)]="username"
+        name="username"
+        placeholder=" Enter a username"
+        required
+      />
+      <p-password
+        [(ngModel)]="password"
+        name="password"
+        placeholder=" Enter a password"
+        [feedback]="false"
+        styleClass="p-inputtext-sm"
+        variant = "filled"
+      ></p-password>
+
+      <button pButton type="submit" label="Create Account"></button>
+    </form>
+</div>

@@ -7,7 +7,8 @@ import { CommonModule } from '@angular/common';
   selector: 'app-home',
   imports: [CommonModule, Menu, TextBox],
   templateUrl: './home.html',
-  styleUrl: './home.css'
+  styleUrl: './home.css',
+  standalone: true
 })
 export class Home {
   onProfileClick() {
