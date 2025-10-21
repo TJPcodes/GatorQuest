@@ -11,7 +11,34 @@ import { CommonModule } from '@angular/common';
   standalone: true
 })
 export class Home {
+  currentState: "menu" | "game" = "menu";
+
+  player = {
+    gpa: 0,
+    hunger: 0,
+    happiness: 0
+  };
+
+  internalStats = {
+    numCourses: 0
+  }
+
+  finishCourse(grade: number){
+    this.player.gpa = (this.player.gpa * (this.internalStats.numCourses) + grade) / (this.internalStats.numCourses + 1);
+    this.internalStats.numCourses += 1;
+  }
+
+  eat(recover: number){
+    this.player.hunger -= recover;
+  }
+
+  
+
   onProfileClick() {
     console.log('Profile icon clicked!');
+  }
+  onStart(){
+    this.currentState = "game";
+    console.log("Switch to game state");
   }
 }
