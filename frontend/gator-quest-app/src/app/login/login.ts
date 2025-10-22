@@ -32,7 +32,7 @@ export class Login {
       email: this.username,
       password: this.password
     };
-      this.http.post('http://localhost:5000/login', creds)
+      this.http.post('http://localhost:5000/api/users/login', creds)
         .subscribe({
           next: (res) => {
             localStorage.setItem('loggedIn', 'true');

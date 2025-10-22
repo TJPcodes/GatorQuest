@@ -25,7 +25,7 @@ export class Signup {
       email: this.username,
       password: this.password
     };
-    this.http.post('http://localhost:5000/register', creds)
+    this.http.post('http://localhost:5000/api/users/register', creds)
     .subscribe({
       next: (res: any) => {
         console.log('User registered:', res);
