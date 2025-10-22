@@ -5,6 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { PasswordModule } from 'primeng/password';
 import { InputTextModule } from 'primeng/inputtext';
 import { ButtonModule } from 'primeng/button';
+import { HttpClient } from '@angular/common/http';
 
 @Component({
   selector: 'app-signup',
@@ -18,8 +19,22 @@ export class Signup {
   lastname = '';
   username = '';
   password = '';
-  constructor(private router: Router) {}
+  constructor(private router: Router, private http: HttpClient) {}
   createdAccount(){
-    this.router.navigate(['/login']);
+    const creds = {
+      email: this.username,
+      password: this.password
+    };
+    this.http.post('http://localhost:5000/register', creds)
+    .subscribe({
+      next: (res: any) => {
+        console.log('User registered:', res);
+        this.router.navigate(['/login']);  
+      },
+      error: (err) => {
+        console.error('Registration failed:', err);
+        alert('Registration failed. Please try again.');
+      }
+    });
   }
 }

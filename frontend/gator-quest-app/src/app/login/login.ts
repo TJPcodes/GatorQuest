@@ -5,6 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { PasswordModule } from 'primeng/password';
 import { InputTextModule } from 'primeng/inputtext';
 import { ButtonModule } from 'primeng/button';
+import { HttpClient } from '@angular/common/http';
 
 
 @Component({
@@ -18,15 +19,29 @@ export class Login {
   username = '';
   password = '';
 
-  constructor(private router: Router) {}
+  constructor(private router: Router, private http: HttpClient) {}
 
   onLogin() {
     if (this.username === 'admin' && this.password === 'admin') {
       // TODO: replace with a real auth service later
       localStorage.setItem('loggedIn', 'true');
       this.router.navigate(['/home']);
-    } else {
-      alert('Invalid credentials!');
+    } 
+    else {
+      const creds = {
+      email: this.username,
+      password: this.password
+    };
+      this.http.post('http://localhost:5000/login', creds)
+        .subscribe({
+          next: (res) => {
+            localStorage.setItem('loggedIn', 'true');
+            this.router.navigate(['/home']);
+          },
+          error: (err) => {
+            alert('Invalid credentials!');
+          }
+        });
     }
   }
   createAccount(){
