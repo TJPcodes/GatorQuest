@@ -20,21 +20,27 @@ export class Signup {
   username = '';
   password = '';
   constructor(private router: Router, private http: HttpClient) {}
-  createdAccount(){
-    const creds = {
-      email: this.username,
-      password: this.password
-    };
-    this.http.post('http://localhost:5000/api/users/register', creds)
+  createdAccount() {
+  const creds = {
+    email: this.username,
+    password: this.password
+  };
+
+  this.http.post('http://localhost:5000/api/users/register', creds)
     .subscribe({
       next: (res: any) => {
+        alert(res.message || 'Registration successful!');
         console.log('User registered:', res);
-        this.router.navigate(['/login']);  
+
+        this.router.navigate(['/login']);
       },
       error: (err) => {
+        const backendMsg =
+          err.error?.message ||
+          'Something went wrong while creating your account. Please try again later.';
+        alert(backendMsg);
         console.error('Registration failed:', err);
-        alert('Registration failed. Please try again.');
       }
     });
-  }
+}
 }
