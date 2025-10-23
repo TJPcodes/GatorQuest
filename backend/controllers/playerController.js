@@ -1,4 +1,5 @@
 import Player from "../models/playerModel.js";
+import Location from "../models/locationmodel.js";
 
 // get all players
 export const getPlayers = async (req, res) => {
@@ -85,4 +86,35 @@ export const attendClass = async (req, res) => {
   await player.save();
 
   res.json(player);
+};
+
+
+export const attendEvent = async (req, res) => {
+  const player = await Player.findById(req.params.id);
+  if (!player) return res.status(404).json({ error: "Player not found" });
+
+  player.social = Math.min(100, player.social + 15);
+  player.energy = Math.max(0, player.energy - 10);
+  await player.save();
+
+  res.json(player);
+};
+
+
+export const visitLocation = async (req, res) => {
+  const player = await Player.findById(req.params.id);
+  if (!player) return res.status(404).json({ error: "Player not found" });
+
+  const { locationName } = req.body;
+  const location = await Location.findOne({ name: locationName });
+  if (!location) return res.status(404).json({ error: "Unknown location" });
+
+  player.gpa = Math.min(4.0, player.gpa + location.gpaEffect);
+  player.energy = Math.max(0, Math.min(100, player.energy + location.energyEffect));
+  player.social = Math.max(0, Math.min(100, player.social + location.socialEffect));
+
+  player.location = location.name;
+  await player.save();
+
+  res.json({ message: `Visited ${location.name}`, effects: location, player });
 };
