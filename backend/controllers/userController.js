@@ -12,14 +12,14 @@ export const register = async (req, res) => {
 
     if (!email || !password) {
       return res.status(400).json({
-        message: "Please provide both an email and a password to register.",
+        message: "Please provide both an username and a password to register.",
       });
     }
 
     const existing = await User.findOne({ email });
     if (existing) {
       return res.status(409).json({
-        message: "An account with this email already exists. Try logging in instead.",
+        message: "An account with this username already exists. Try logging in instead.",
       });
     }
 
@@ -47,14 +47,14 @@ export const login = async (req, res) => {
 
     if (!email || !password) {
       return res.status(400).json({
-        message: "Please enter both your email and password.",
+        message: "Please enter both your username and password.",
       });
     }
 
     const user = await User.findOne({ email });
     if (!user) {
       return res.status(401).json({
-        message: "We couldn't find an account with that email address.",
+        message: "We couldn't find an account with that username.",
       });
     }
 
