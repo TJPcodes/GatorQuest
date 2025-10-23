@@ -22,28 +22,24 @@ export class Login {
   constructor(private router: Router, private http: HttpClient) {}
 
   onLogin() {
-    if (this.username === 'admin' && this.password === 'admin') {
-      // TODO: replace with a real auth service later
-      localStorage.setItem('loggedIn', 'true');
-      this.router.navigate(['/home']);
-    } 
-    else {
-      const creds = {
-      email: this.username,
-      password: this.password
-    };
-      this.http.post('http://localhost:5000/api/users/login', creds)
-        .subscribe({
-          next: (res) => {
-            localStorage.setItem('loggedIn', 'true');
-            this.router.navigate(['/home']);
-          },
-          error: (err) => {
-            alert('Invalid credentials!');
-          }
-        });
-    }
-  }
+  const creds = {
+    email: this.username,
+    password: this.password
+  };
+
+  this.http.post('http://localhost:5000/api/users/login', creds)
+    .subscribe({
+      next: (res: any) => {
+        alert(res.message || 'Login successful!');
+        localStorage.setItem('loggedIn', 'true');
+        this.router.navigate(['/home']);
+      },
+      error: (err) => {
+        const backendMsg = err.error?.message || 'Login failed. Please try again.';
+        alert(backendMsg);
+      }
+    });
+}
   createAccount(){
     this.router.navigate(['/signup']);
   }
