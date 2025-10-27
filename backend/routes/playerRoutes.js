@@ -9,10 +9,7 @@ import {
   workout,
   attendClass,
   attendEvent,
-  visitLocation,
-  nextDay, 
-  getGameStatus,
-  resetGame
+  visitLocation
 } from "../controllers/playerController.js";
 
 const router = express.Router();
@@ -27,10 +24,5 @@ router.put("/:id/workout", workout);
 router.put("/:id/class", attendClass);
 router.put("/:id/event", attendEvent);
 router.put("/:id/visit", visitLocation);
-router.put("/:id/nextDay", nextDay);
-router.get("/:id/status", getGameStatus);
-router.put("/:id/reset", resetGame);
-
 
 export default router;
-

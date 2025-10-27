@@ -26,11 +26,14 @@ export const nextDay = async (req, res) => {
   res.json({ message, player });
 
   if (player.gpa < 1.0) {
-        return res.json({ message: "You have failed out of UF. Game over!", player });
+  return res.json({ message: "You have failed out of UF. Game over!", player });
   }
   if (player.day >= 100 && player.gpa >= 3.0) {
     return res.json({ message: "Congratulations! You graduated successfully!", player });
   }
+
+  await player.save();
+  res.json({ message, player });
 
 };
 
