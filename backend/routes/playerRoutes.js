@@ -24,5 +24,7 @@ router.put("/:id/workout", workout);
 router.put("/:id/class", attendClass);
 router.put("/:id/event", attendEvent);
 router.put("/:id/visit", visitLocation);
+router.post("/:id/next-day", nextDay);
+
 
 export default router;
