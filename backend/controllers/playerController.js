@@ -15,16 +15,19 @@ export const createPlayer = async (req, res) => {
   res.json(player);
 };
 
-// study increases gpa but lowers energy
+// study increases GPA a little, costs energy
 export const study = async (req, res) => {
   const player = await Player.findById(req.params.id);
   if (!player) return res.status(404).json({ error: "Player not found" });
 
-  player.gpa = Math.min(4.0, player.gpa + 0.1);
-  player.energy = Math.max(0, player.energy - 15);
-  await player.save();
+  player.energy = Math.max(0, player.energy - 12);
+  player.gpa = Math.min(4.0, parseFloat((player.gpa + 0.04).toFixed(2)));
 
-  res.json(player);
+  await player.save();
+  return res.json({
+    message: "You studied hard and improved your GPA slightly.",
+    player
+  });
 };
 
 // eat restores energy
@@ -33,73 +36,118 @@ export const eat = async (req, res) => {
   if (!player) return res.status(404).json({ error: "Player not found" });
 
   player.energy = Math.min(100, player.energy + 20);
-  await player.save();
 
-  res.json(player);
+  await player.save();
+  return res.json({
+    message: "You grabbed some food and recovered energy.",
+    player
+  });
 };
 
-// rest restores energy and lowers social
+// rest restores lots of energy
 export const rest = async (req, res) => {
   const player = await Player.findById(req.params.id);
   if (!player) return res.status(404).json({ error: "Player not found" });
 
   player.energy = Math.min(100, player.energy + 30);
-  player.social = Math.max(0, player.social - 5);
-  await player.save();
 
-  res.json(player);
+  await player.save();
+  return res.json({
+    message: "You rested and regained a good amount of energy.",
+    player
+  });
 };
 
-// party increases social but lowers energy and gpa
+// party boosts social a lot, but risks GPA loss
 export const party = async (req, res) => {
   const player = await Player.findById(req.params.id);
   if (!player) return res.status(404).json({ error: "Player not found" });
 
-  player.social = Math.min(100, player.social + 25);
   player.energy = Math.max(0, player.energy - 20);
-  player.gpa = Math.max(0, player.gpa - 0.05);
-  await player.save();
+  player.social = Math.min(100, player.social + 12);
 
-  res.json(player);
+  // chance of GPA loss
+  if (Math.random() < 0.35) {
+    player.gpa = Math.max(0, parseFloat((player.gpa - 0.05).toFixed(2)));
+  }
+
+  await player.save();
+  return res.json({
+    message: "You went out! Social went up, but your GPA might have slipped...",
+    player
+  });
 };
 
-// workout increases energy cap slightly and social a bit
+// workout boosts social & health, moderate energy cost
 export const workout = async (req, res) => {
   const player = await Player.findById(req.params.id);
   if (!player) return res.status(404).json({ error: "Player not found" });
 
-  player.energy = Math.max(0, player.energy - 10);
-  player.social = Math.min(100, player.social + 10);
-  player.gpa = Math.min(4.0, player.gpa + 0.02);
-  await player.save();
+  player.energy = Math.max(0, player.energy - 15);
+  player.social = Math.min(100, player.social + 5);
 
-  res.json(player);
+  await player.save();
+  return res.json({
+    message: "You worked out and feel motivated.",
+    player
+  });
 };
 
-// attend class raises gpa slightly and lowers energy
+// class raises GPA, moderate energy cost
 export const attendClass = async (req, res) => {
   const player = await Player.findById(req.params.id);
   if (!player) return res.status(404).json({ error: "Player not found" });
 
-  player.gpa = Math.min(4.0, player.gpa + 0.05);
   player.energy = Math.max(0, player.energy - 10);
-  await player.save();
+  player.gpa = Math.min(4.0, parseFloat((player.gpa + 0.05).toFixed(2)));
 
-  res.json(player);
+  await player.save();
+  return res.json({
+    message: "You attended class — small but meaningful GPA gain.",
+    player
+  });
 };
 
-
+// events boost social moderately
 export const attendEvent = async (req, res) => {
   const player = await Player.findById(req.params.id);
   if (!player) return res.status(404).json({ error: "Player not found" });
 
-  player.social = Math.min(100, player.social + 15);
   player.energy = Math.max(0, player.energy - 10);
-  await player.save();
+  player.social = Math.min(100, player.social + 15);
 
-  res.json(player);
+  await player.save();
+  return res.json({
+    message: "You joined a campus event and made new social connections.",
+    player
+  });
 };
 
+export const nextDay = async (req, res) => {
+  const player = await Player.findById(req.params.id);
+  if (!player) return res.status(404).json({ error: "Player not found" });
+
+  player.day += 1;
+  player.energy = Math.min(100, player.energy + 20); // overnight restore
+  const events = [
+  { text: "You found $5 on the ground!", money: +5 },
+  { text: "You overslept. -10 energy.", energy: -10 },
+  { text: "A friend bought you coffee. +10 social.", social: +10 },
+];
+
+const happening = events[Math.floor(Math.random() * events.length)];
+
+player.money += happening.money ?? 0;
+player.energy = Math.max(0, Math.min(100, player.energy + (happening.energy ?? 0)));
+player.social = Math.max(0, Math.min(100, player.social + (happening.social ?? 0)));
+await player.save();
+
+  res.json({ message: happening.text, player });
+  res.json({
+    message: `A new day begins at UF... Day ${player.day}`,
+    player
+  });
+};
 
 export const visitLocation = async (req, res) => {
   const player = await Player.findById(req.params.id);

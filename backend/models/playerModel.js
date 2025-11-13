@@ -14,7 +14,14 @@ const playerSchema = new mongoose.Schema({
   money: { type: Number, default: 50 },    
   day: { type: Number, default: 1 },  
 
-  lastUpdated: { type: Date, default: Date.now }
+  lastUpdated: { type: Date, default: Date.now },
+
+  activeQuest: {
+  type: mongoose.Schema.Types.ObjectId,
+  ref: "Quest",
+  default: null,
+  }
+
 });
 
 const Player = mongoose.model("Player", playerSchema);
