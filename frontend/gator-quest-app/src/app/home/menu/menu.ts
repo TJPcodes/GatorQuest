@@ -1,17 +1,14 @@
-import { Component, Output, EventEmitter } from '@angular/core';
+import { Component } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 
 @Component({
   selector: 'app-menu',
-  imports: [],
+  imports: [CommonModule, FormsModule],
   templateUrl: './menu.html',
   styleUrl: './menu.css'
 })
 export class Menu {
 
-  @Output() startGameEvent = new EventEmitter<void>();
-
-  onStartClick() {
-    this.startGameEvent.emit();
-  }
 
 }
