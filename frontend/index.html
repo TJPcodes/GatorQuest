@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>GatorQuest Auth Test</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <main class="container">
+      <h1>GatorQuest — Auth Test</h1>
+
+      <section class="card">
+        <h2>Register</h2>
+        <form id="registerForm">
+          <label>Email<input type="email" name="email" required /></label>
+          <label>Password<input type="password" name="password" required /></label>
+          <button type="submit">Register</button>
+        </form>
+        <pre id="registerResult" class="result"></pre>
+      </section>
+
+      <section class="card">
+        <h2>Login</h2>
+        <form id="loginForm">
+          <label>Email<input type="email" name="email" required /></label>
+          <label>Password<input type="password" name="password" required /></label>
+          <button type="submit">Login</button>
+        </form>
+        <pre id="loginResult" class="result"></pre>
+      </section>
+
+      <section class="card">
+        <h2>Notes</h2>
+        <p>The frontend assumes the backend is running at <code>http://localhost:5000</code>.</p>
+        <p>Open the developer console to view network requests.</p>
+      </section>
+    </main>
+
+    <script src="app.js"></script>
+  </body>
+</html>
