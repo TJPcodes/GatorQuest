@@ -9,7 +9,8 @@ import {
   workout,
   attendClass,
   attendEvent,
-  visitLocation
+  visitLocation,
+  nextDay
 } from "../controllers/playerController.js";
 
 const router = express.Router();
