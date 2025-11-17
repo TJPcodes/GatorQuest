@@ -12,4 +12,8 @@ import { FormsModule } from '@angular/forms';
 })
 export class TextBox {
   userInput: string = '';
+  sendCommand() {
+    console.log('User Input:', this.userInput);
+    const command = this.userInput.trim();
+  }
 }

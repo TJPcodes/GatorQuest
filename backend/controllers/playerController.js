@@ -21,6 +21,13 @@ export const createPlayer = async (req, res) => {
   res.json(player);
 };
 
+// GET PLAYER BY NAME
+export const getPlayerByName = async (req, res) => {
+  const player = await Player.findOne({ name: req.params.name });
+  if (!player) return res.status(404).json({ error: "Player not found" });
+  res.json(player);
+};
+
 // STUDY ACTION
 export const study = async (req, res) => {
   const player = await Player.findById(req.params.id);
