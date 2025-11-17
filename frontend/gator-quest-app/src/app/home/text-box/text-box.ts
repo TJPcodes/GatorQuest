@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, EventEmitter, Output } from '@angular/core';
 import { InputTextModule } from 'primeng/inputtext';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -12,6 +12,8 @@ import { FormsModule } from '@angular/forms';
 })
 export class TextBox {
   userInput: string = '';
+  player: any = {};
+  @Output() playerUpdated = new EventEmitter<any>();
   async sendCommand() {
     console.log('User Input:', this.userInput);
     const command = this.userInput.trim().toLowerCase();
@@ -24,7 +26,8 @@ export class TextBox {
         });
 
         const data = await res.json();
-        console.log(data);
+        this.playerUpdated.emit(data.player);
+        console.log(data.player);
         } 
       catch (err) {
         console.error("Error:", err);

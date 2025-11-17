@@ -32,6 +32,7 @@ export class Login {
       next: (res: any) => {
         alert(res.message || 'Login successful!');
         localStorage.setItem('loggedIn', 'true');
+        localStorage.setItem('playerName', this.username);
         const username = res.user.email;
         console.log(username)
         console.log('User logged in:', res);

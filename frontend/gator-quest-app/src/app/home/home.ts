@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { Menu } from './menu/menu';
 import { TextBox } from './text-box/text-box';
 import { CommonModule } from '@angular/common';
@@ -10,29 +10,34 @@ import { CommonModule } from '@angular/common';
   styleUrl: './home.css',
   standalone: true
 })
-export class Home {
+export class Home implements OnInit {
   currentState: "menu" | "game" = "menu";
-
-  player = {
+  player: any = {
     gpa: 0,
-    hunger: 0,
-    happiness: 0
+    energy: 0,
+    social: 0
   };
 
-  internalStats = {
-    numCourses: 0
+  ngOnInit() {
+    this.loadPlayerStats();
   }
 
-  finishCourse(grade: number){
-    this.player.gpa = (this.player.gpa * (this.internalStats.numCourses) + grade) / (this.internalStats.numCourses + 1);
-    this.internalStats.numCourses += 1;
+  async loadPlayerStats() {
+    try {
+      const playerName = localStorage.getItem('playerName');
+      const res = await fetch(`http://localhost:5000/api/players/byName/${playerName}`);
+      const data = await res.json();
+      this.player = data;
+      console.log('Initial player loaded:', this.player);
+    } catch (err) {
+      console.error('Error loading player stats:', err);
+    }
   }
 
-  eat(recover: number){
-    this.player.hunger -= recover;
+  updatePlayerStats(player: any) {
+    this.player = player;
+    console.log('Player updated:', this.player);
   }
-
-  
 
   onProfileClick() {
     console.log('Profile icon clicked!');

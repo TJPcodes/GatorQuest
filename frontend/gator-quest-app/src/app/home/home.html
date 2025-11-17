@@ -4,12 +4,11 @@
         <i class="pi pi-user profile-icon" (click)="onProfileClick()"></i>
     </header>
     <div *ngIf="currentState === 'menu'" class="component menu-container">
-        <app-menu (startGameEvent) = onStart()>
-
+        <app-menu (startGameEvent)="onStart()" [player]="player">
         </app-menu>
     </div>
     <div class="component textbox-container">
-        <app-text-box>
+        <app-text-box (playerUpdated)="updatePlayerStats($event)">
             
         </app-text-box>
     </div>
