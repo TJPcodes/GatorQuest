@@ -31,9 +31,30 @@ export class Signup {
       next: (res: any) => {
         alert(res.message || 'Registration successful!');
         console.log('User registered:', res);
+        const userId = res.user._id;
+        localStorage.setItem("userId", userId);  
+        const newPlayer = {
+          name: this.username,
+          userId: userId
+        };
+        
+        this.http.post('http://localhost:5000/api/players', newPlayer)
+          .subscribe({
+            next: (player: any) => {
+              console.log("Player created:", player);
+
+              localStorage.setItem("playerId", player._id);
+
+              this.router.navigate(['/login']);
+            },
+            error: (err) => {
+              console.error("Player creation failed:", err);
+            }
+          });
 
         this.router.navigate(['/login']);
       },
+
       error: (err) => {
         const backendMsg =
           err.error?.message ||

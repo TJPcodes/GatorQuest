@@ -1,5 +1,5 @@
 <div class="component-background">
     <div class="user-text">
-        <input type="text" pInputText [(ngModel)]="userInput" placeholder="Enter Command" class="user-text-box" />
+        <input type="text" pInputText [(ngModel)]="userInput" placeholder="Enter Command" class="user-text-box" (keyup.enter)="sendCommand()" />
     </div>
 </div>
