@@ -12,8 +12,27 @@ import { FormsModule } from '@angular/forms';
 })
 export class TextBox {
   userInput: string = '';
-  sendCommand() {
+  async sendCommand() {
     console.log('User Input:', this.userInput);
-    const command = this.userInput.trim();
-  }
+    const command = this.userInput.trim().toLowerCase();
+    const playerId = localStorage.getItem('playerId');
+    const validCommands = new Set(["study", "eat", "rest", "party", "workout", "class", "event", "visit", "next-day"]);
+    if (validCommands.has(command)) {
+      try {
+        const res = await fetch(`http://localhost:5000/api/players/${playerId}/${command}`, {
+          method: "PUT"
+        });
+
+        const data = await res.json();
+        console.log(data);
+        } 
+      catch (err) {
+        console.error("Error:", err);
+      }
+   }
+   else {
+      console.log("Invalid command: ", command);
+   }
+   this.userInput = '';
+ }
 }
