@@ -7,7 +7,7 @@ import playerRoutes from "./routes/playerRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
 import gameRoutes from "./routes/gameRoutes.js";
 import questRoutes from "./routes/questRoutes.js";
-
+import adminRoutes from "./routes/adminRoutes.js";
 
 dotenv.config();
 const app = express();
@@ -20,6 +20,7 @@ app.use("/api/players", playerRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/game", gameRoutes);
 app.use("/api/quests", questRoutes);
+app.use("/admin", adminRoutes);
 
 
 // Test route

@@ -126,7 +126,7 @@ export const nextDay = async (req, res) => {
   // determine current UF year
   const currentYear =
     player.day <= 25 ? 1 :
-    player.day <= 50 ? 2 :
+    player.day <= 50 ? 2 :  
     player.day <= 75 ? 3 : 4;
 
   // choose storyline prompt
