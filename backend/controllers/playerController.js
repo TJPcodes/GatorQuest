@@ -93,6 +93,29 @@ export const workout = async (req, res) => {
   });
 };
 
+//connects user actions to their stats
+export const applyAction = async (req, res) => {
+  try {
+    const { playerId, action } = req.body;
+
+    const player = await Player.findById(playerId);
+    if (!player) return res.status(404).json({ error: "Player not found" });
+
+    // Apply each stat change
+    player.energy = Math.max(0, Math.min(100, player.energy + (action.energy || 0)));
+    player.social = Math.max(0, Math.min(100, player.social + (action.social || 0)));
+    player.gpa = Math.max(0, Math.min(4, player.gpa + (action.gpa || 0)));
+    player.money = player.money + (action.money || 0);
+
+    await player.save();
+
+    res.json({ message: "Action applied", player });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+
 // class raises GPA, moderate energy cost
 export const attendClass = async (req, res) => {
   const player = await Player.findById(req.params.id);
@@ -142,7 +165,6 @@ player.energy = Math.max(0, Math.min(100, player.energy + (happening.energy ?? 0
 player.social = Math.max(0, Math.min(100, player.social + (happening.social ?? 0)));
 await player.save();
 
-  res.json({ message: happening.text, player });
   res.json({
     message: `A new day begins at UF... Day ${player.day}`,
     player
