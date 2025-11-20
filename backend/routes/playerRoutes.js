@@ -9,13 +9,16 @@ import {
   workout,
   attendClass,
   attendEvent,
-  visitLocation
+  visitLocation,
+  nextDay,
+  getPlayerByName
 } from "../controllers/playerController.js";
 
 const router = express.Router();
 
 router.get("/", getPlayers);
 router.post("/", createPlayer);
+router.get("/byName/:name", getPlayerByName);
 router.put("/:id/study", study);
 router.put("/:id/eat", eat);
 router.put("/:id/rest", rest);

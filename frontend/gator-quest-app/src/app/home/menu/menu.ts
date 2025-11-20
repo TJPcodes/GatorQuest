@@ -1,17 +1,15 @@
-import { Component, Output, EventEmitter } from '@angular/core';
+import { Component, Input } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { TextBox } from '../text-box/text-box';
 
 @Component({
   selector: 'app-menu',
-  imports: [],
+  imports: [CommonModule, FormsModule, TextBox],
   templateUrl: './menu.html',
-  styleUrl: './menu.css'
+  styleUrl: './menu.css',
+  standalone: true
 })
 export class Menu {
-
-  @Output() startGameEvent = new EventEmitter<void>();
-
-  onStartClick() {
-    this.startGameEvent.emit();
-  }
-
+  @Input() player: any = {social: 0, energy: 0, gpa: 0};
 }

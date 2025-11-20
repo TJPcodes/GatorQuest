@@ -16,6 +16,23 @@ export const register = async (req, res) => {
       });
     }
 
+    // Password validation: min 12 chars, uppercase, lowercase, and special character
+    if (password.length < 12) {
+      return res.status(400).json({
+        message: "Password must be at least 12 characters long.",
+      });
+    }
+
+    const hasUppercase = /[A-Z]/.test(password);
+    const hasLowercase = /[a-z]/.test(password);
+    const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+
+    if (!hasUppercase || !hasLowercase || !hasSpecialChar) {
+      return res.status(400).json({
+        message: "Password must contain at least one uppercase letter, one lowercase letter, and one special character.",
+      });
+    }
+
     const existing = await User.findOne({ email });
     if (existing) {
       return res.status(409).json({

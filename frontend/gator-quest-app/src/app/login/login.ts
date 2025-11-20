@@ -32,7 +32,20 @@ export class Login {
       next: (res: any) => {
         alert(res.message || 'Login successful!');
         localStorage.setItem('loggedIn', 'true');
-        this.router.navigate(['/home']);
+        localStorage.setItem('playerName', this.username);
+        const username = res.user.email;
+        console.log(username)
+        console.log('User logged in:', res);
+        this.http.get(`http://localhost:5000/api/players/byName/${username}`)
+          .subscribe({
+            next: (player: any) => {
+              localStorage.setItem('playerId', player._id); 
+              this.router.navigate(['/home']);
+            },
+            error: (err) => {
+              console.error('Failed to fetch player:', err);
+            }
+          });
       },
       error: (err) => {
         const backendMsg = err.error?.message || 'Login failed. Please try again.';
