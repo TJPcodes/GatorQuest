@@ -1,5 +1,6 @@
 import Quest from "../models/questModel.js";
 import Player from "../models/playerModel.js";
+import { checkGameEnd } from "./gameController.js";
 
 export const getQuests = async (req, res) => {
   const quests = await Quest.find();
@@ -52,11 +53,31 @@ export const completeQuest = async (req, res) => {
     await quest.save();
     await player.save();
 
-    return res.json({
+    // Check if all quests are completed
+    const allQuests = await Quest.find();
+    const allCompleted = allQuests.every(q => q.completed);
+
+    let response = {
       message: `${quest.title} completed!`,
       player,
       quest
-    });
+    };
+
+    // If all quests completed, check win/lose conditions
+    if (allCompleted) {
+      const gameEndResult = await checkGameEnd(player);
+      
+      if (gameEndResult.isGameOver) {
+        response.gameOver = true;
+        response.gameStatus = gameEndResult.status;
+        response.message = gameEndResult.message;
+      } else {
+        response.allQuestsCompleted = true;
+        response.message += " All stories have been completed!";
+      }
+    }
+
+    return res.json(response);
   }
 
   return res.json({

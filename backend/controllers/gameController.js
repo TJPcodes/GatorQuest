@@ -1,4 +1,5 @@
 import Player from "../models/playerModel.js";
+import Quest from "../models/questModel.js";
 
 export const nextDay = async (req, res) => {
   const player = await Player.findById(req.params.id);
@@ -15,6 +16,9 @@ export const nextDay = async (req, res) => {
   } else if (roll < 0.4) {
     player.social = Math.min(100, player.social + 10);
     message += " You met new people at the dining hall.";
+  } else if (roll < 0.5) {
+    player.gpa = Math.min(4.0, player.gpa - 0.10);
+    message += " You missed an important assignment deadline!";
   } else if (roll < 0.6) {
     player.energy = Math.max(0, player.energy - 20);
     message += " You stayed up late cramming!";
@@ -24,17 +28,29 @@ export const nextDay = async (req, res) => {
 
   await player.save();
   res.json({ message, player });
+};
 
+// Check win/lose conditions after all stories are completed
+export const checkGameEnd = async (player) => {
+  // Check if player failed out
   if (player.gpa < 1.0) {
-  return res.json({ message: "You have failed out of UF. Game over!", player });
-  }
-  if (player.day >= 100 && player.gpa >= 3.0) {
-    return res.json({ message: "Congratulations! You graduated successfully!", player });
+    return {
+      isGameOver: true,
+      status: "failed",
+      message: "You have failed out of UF. Game over!"
+    };
   }
 
-  await player.save();
-  res.json({ message, player });
+  // Check if player graduated successfully
+  if (player.day >= 100 && player.gpa >= 1.0) {
+    return {
+      isGameOver: true,
+      status: "graduated",
+      message: "Congratulations, you graduated successfully!"
+    };
+  }
 
+  return { isGameOver: false };
 };
 
 // check current game status (should be useful for frontend updates)
