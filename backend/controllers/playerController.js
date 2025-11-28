@@ -3,7 +3,7 @@ import Location from "../models/locationmodel.js";
 import { yearPrompts, randomDailyEvents } from "../utils/storyEvents.js";
 import { checkGameEnd } from "./gameController.js";
 
-// Utility to clamp values cleanly
+// Utility clamp
 function clamp(value, min, max) {
   return Math.max(min, Math.min(max, value));
 }
@@ -87,7 +87,7 @@ export const getPlayerByName = async (req, res) => {
   res.json(player);
 };
 
-// STUDY ACTION
+// STUDY
 export const study = async (req, res) => {
   const player = await Player.findById(req.params.id);
   if (!player) return res.status(404).json({ error: "Player not found" });
@@ -101,33 +101,31 @@ export const study = async (req, res) => {
   return res.json(response);
 };
 
-// EAT ACTION
+// EAT
 export const eat = async (req, res) => {
   const player = await Player.findById(req.params.id);
   if (!player) return res.status(404).json({ error: "Player not found" });
 
   incrementDay(player);
   player.energy = clamp(player.energy + 20, 0, 100);
-
   await player.save();
   const response = await buildActionResponse("You grabbed some food and restored energy.", player);
   return res.json(response);
 };
 
-// REST ACTION
+// REST
 export const rest = async (req, res) => {
   const player = await Player.findById(req.params.id);
   if (!player) return res.status(404).json({ error: "Player not found" });
 
   incrementDay(player);
   player.energy = clamp(player.energy + 30, 0, 100);
-
   await player.save();
   const response = await buildActionResponse("You rested and regained energy.", player);
   return res.json(response);
 };
 
-// PARTY ACTION
+// PARTY
 export const party = async (req, res) => {
   const player = await Player.findById(req.params.id);
   if (!player) return res.status(404).json({ error: "Player not found" });
@@ -145,7 +143,7 @@ export const party = async (req, res) => {
   return res.json(response);
 };
 
-// WORKOUT ACTION
+// WORKOUT
 export const workout = async (req, res) => {
   const player = await Player.findById(req.params.id);
   if (!player) return res.status(404).json({ error: "Player not found" });
@@ -173,7 +171,6 @@ export const attendClass = async (req, res) => {
   return res.json(response);
 };
 
-
 // ATTEND EVENT
 export const attendEvent = async (req, res) => {
   const player = await Player.findById(req.params.id);
@@ -188,98 +185,77 @@ export const attendEvent = async (req, res) => {
   return res.json(response);
 };
 
-// NEXT DAY (CORE GAME LOOP)
+// NEXT DAY (main loop)
 export const nextDay = async (req, res) => {
   const player = await Player.findById(req.params.id);
   if (!player) return res.status(404).json({ error: "Player not found" });
 
-  // advance day
   player.day += 1;
 
-  // determine current UF year
   const currentYear =
     player.day <= 25 ? 1 :
-    player.day <= 50 ? 2 :  
+    player.day <= 50 ? 2 :
     player.day <= 75 ? 3 : 4;
 
-  // choose storyline prompt
-  const storyLine = yearPrompts[currentYear][
-    Math.floor(Math.random() * yearPrompts[currentYear].length)
-  ];
+  const storyLine =
+    yearPrompts[currentYear][
+      Math.floor(Math.random() * yearPrompts[currentYear].length)
+    ];
 
-  // random event every 3 days
   let event = null;
   if (player.day % 3 === 0) {
     event = randomDailyEvents[
       Math.floor(Math.random() * randomDailyEvents.length)
     ];
 
-    if (event.energy) {
-      player.energy = clamp(player.energy + event.energy, 0, 100);
-    }
-    if (event.gpa) {
-      player.gpa = clamp(parseFloat((player.gpa + event.gpa).toFixed(2)), 0, 4.0);
-    }
-    if (event.social) {
-      player.social = clamp(player.social + event.social, 0, 100);
-    }
+    if (event.energy) player.energy = clamp(player.energy + event.energy, 0, 100);
+    if (event.gpa) player.gpa = clamp(parseFloat((player.gpa + event.gpa).toFixed(2)), 0, 4.0);
+    if (event.social) player.social = clamp(player.social + event.social, 0, 100);
   }
 
   await player.save();
 
-  // FAIL-OUT CHECK
+  // Fail-out
   if (player.gpa < 1.0) {
     return res.json({
-      message: "Your GPA has fallen below the minimum requirement. You are dismissed from UF.",
+      message: "Your GPA has fallen below UF’s requirement. You are dismissed.",
       player
     });
   }
 
-  // GRADUATION CHECK
+  // Graduation
   if (player.day >= 100) {
-    const { gpa, energy, social } = player;
-    let message = "";
-
-    // HONORS (3.7+)
-    if (gpa >= 3.7) {
-      message = "You finish your degree with strong academic performance.";
-      message += energy < 20
-        ? " Despite ending the year drained, your record stands out."
-        : " You maintained balance through most of the semester.";
-      if (social >= 70) message += " You also built strong connections along the way.";
-      return res.json({ message, player });
-    }
-
-    // SOLID GRADUATE (3.0–3.69)
-    if (gpa >= 3.0) {
-      message = "You graduate with a solid academic record.";
-      if (energy < 25) message += " You end the year exhausted but relieved.";
-      if (social >= 70) message += " Your involvement creates opportunities post-graduation.";
-      return res.json({ message, player });
-    }
-
-    // NARROW PASS (2.5–2.99)
-    if (gpa >= 2.5) {
-      message = "You meet graduation requirements, though the year was difficult.";
-      if (social >= 70) message += " Your connections help give you direction moving forward.";
-      if (energy < 20) message += " Low energy reflects how demanding the semester was.";
-      return res.json({ message, player });
-    }
-
-    // BELOW GRADUATION THRESHOLD
-    return res.json({
-      message: "You complete the year but do not meet UF's graduation GPA requirement.",
-      player
-    });
+    return res.json(generateGraduationMessage(player));
   }
 
-  // NORMAL DAY RESPONSE
   return res.json({
-    message: event ? `${storyLine} ${event.text}` : storyLine,
+    message: `A new day begins at UF... Day ${player.day}`,
+    storyLine,
     event,
     player
   });
 };
+
+// Graduation helper
+function generateGraduationMessage(player) {
+  const { gpa, energy, social } = player;
+  let msg = "";
+
+  if (gpa >= 3.7) {
+    msg = "You graduate with honors! Excellent academics.";
+    if (social >= 70) msg += " You were well-connected too!";
+    if (energy < 20) msg += " You’re exhausted but proud.";
+  } else if (gpa >= 3.0) {
+    msg = "You graduate with a solid academic record.";
+    if (social >= 70) msg += " Your involvement pays off!";
+  } else if (gpa >= 2.5) {
+    msg = "You graduate, but it was a tough journey.";
+  } else {
+    msg = "You complete the year but do not meet UF's GPA requirement.";
+  }
+
+  return { message: msg, player };
+}
 
 // VISIT LOCATION
 export const visitLocation = async (req, res) => {
@@ -296,9 +272,32 @@ export const visitLocation = async (req, res) => {
   player.social = clamp(player.social + location.socialEffect, 0, 100);
 
   player.location = location.name;
-
   await player.save();
   const response = await buildActionResponse(`Visited ${location.name}`, player);
   response.effects = location;
   res.json(response);
+};
+
+
+
+//CONNECT PLAYER STATS
+export const applyAction = async (req, res) => {
+  try {
+    const { playerId, action } = req.body;
+
+    const player = await Player.findById(playerId);
+    if (!player) return res.status(404).json({ error: "Player not found" });
+
+    // Apply each stat change
+    player.energy = Math.max(0, Math.min(100, player.energy + (action.energy || 0)));
+    player.social = Math.max(0, Math.min(100, player.social + (action.social || 0)));
+    player.gpa = Math.max(0, Math.min(4, player.gpa + (action.gpa || 0)));
+    player.money = player.money + (action.money || 0);
+
+    await player.save();
+
+    res.json({ message: "Action applied", player });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 };
