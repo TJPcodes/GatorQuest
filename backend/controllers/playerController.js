@@ -21,18 +21,10 @@ async function buildActionResponse(message, player) {
     eventMessage = applyRandomEvent(player);
   }
 
-  const gameEndResult = await checkGameEnd(player);
-  
   const response = {
     message: message + eventMessage,
     player
   };
-
-  if (gameEndResult.isGameOver) {
-    response.gameOver = true;
-    response.gameStatus = gameEndResult.status;
-    response.message = gameEndResult.message;
-  }
 
   return response;
 }

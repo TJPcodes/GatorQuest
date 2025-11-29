@@ -90,6 +90,7 @@ export class Home implements OnInit {
   getNextStory() {
     // Don't advance story if game is over
     if (this.currentState === "gameover") {
+      console.log("Game is already over, not advancing story");
       return;
     }
 
@@ -98,10 +99,14 @@ export class Home implements OnInit {
     this.storyIndex = (this.storyIndex + 1) % storyChoices.length;
     this.currentStory = storyChoices[this.storyIndex];
     
+    console.log(`getNextStory: wasAtEnd=${wasAtEnd}, storyIndex=${this.storyIndex}, storyLength=${storyChoices.length}, currentStory=${this.currentStory?.id}`);
+    
     // If we were at the last story and now we've wrapped around, all stories are done
     if (wasAtEnd && this.storyIndex === 0) {
+      console.log("All stories completed!");
       this.storiesCompleted = true;
       const gameEndResult = this.evaluateGameEnd();
+      console.log("Game end result:", gameEndResult);
       if (gameEndResult.isGameOver) {
         this.handleGameOver(gameEndResult.message, gameEndResult.status);
       }
@@ -109,7 +114,12 @@ export class Home implements OnInit {
   }
 
   evaluateGameEnd() {
-    // Check if player failed out
+    // Only evaluate game end if all stories have been completed
+    if (!this.storiesCompleted) {
+      return { isGameOver: false, status: "", message: "" };
+    }
+    
+    // Check if player failed out (GPA < 1.0)
     if (this.player.gpa < 1.0) {
       return {
         isGameOver: true,
@@ -118,16 +128,12 @@ export class Home implements OnInit {
       };
     }
     
-    // If all stories completed, player graduates (unless failed)
-    if (this.storiesCompleted) {
-      return {
-        isGameOver: true,
-        status: "graduated",
-        message: "Congratulations, you graduated successfully!"
-      };
-    }
-
-    return { isGameOver: false, status: "", message: "" };
+    // If all stories completed and GPA >= 1.0, player graduates
+    return {
+      isGameOver: true,
+      status: "graduated",
+      message: "Congratulations, you graduated successfully!"
+    };
   }
 
   handleGameOver(message: string, status: string) {
