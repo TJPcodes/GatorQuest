@@ -65,6 +65,43 @@
   border-radius: 8px;
 }
 
+.profile-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.profile-menu {
+  position: absolute;
+  top: 120%;
+  right: 0;
+  background: #ffffff;
+  color: #333;
+  border: 1px solid rgba(0,0,0,0.1);
+  border-radius: 8px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.15);
+  padding: 0.5rem;
+  min-width: 160px;
+  z-index: 10;
+}
+
+.logout-btn {
+  width: 100%;
+  background: transparent;
+  border: none;
+  text-align: left;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.95rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.logout-btn:hover {
+  background: #f4f6f8;
+}
+
 .game-over-screen {
   position: fixed;
   top: 0;
