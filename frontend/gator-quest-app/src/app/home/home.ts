@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { Router } from '@angular/router';
 import { Menu } from './menu/menu';
 import { TextBox } from './text-box/text-box';
 import { CommonModule } from '@angular/common';
@@ -32,6 +33,9 @@ export class Home implements OnInit {
   eventMessage: string = "";  // Store event message to display
   gameOverMessage: string = "";
   gameStatus: string = "";
+  showProfileMenu: boolean = false;
+
+  constructor(private router: Router) {}
 
   ngOnInit() {
     this.loadPlayerStats();
@@ -174,7 +178,17 @@ export class Home implements OnInit {
   }
 
   onProfileClick() {
-    console.log('Profile icon clicked!');
+    this.showProfileMenu = !this.showProfileMenu;
+  }
+
+  onLogout() {
+    try {
+      localStorage.removeItem('token');
+      localStorage.removeItem('playerId');
+      localStorage.removeItem('playerName');
+    } catch {}
+    this.showProfileMenu = false;
+    this.router.navigate(['/login']);
   }
 
   onStart(){

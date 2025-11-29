@@ -1,7 +1,15 @@
 <div class="container" [ngClass]="{'no-scroll': currentState === 'gameover' || currentState === 'event'}">
     <header class="header">
         <p class="title">Gator Quest</p>
-        <i class="pi pi-user profile-icon" (click)="onProfileClick()"></i>
+        <div class="profile-wrapper">
+            <i class="pi pi-user profile-icon" (click)="onProfileClick()"></i>
+            <div *ngIf="showProfileMenu" class="profile-menu">
+                <button class="logout-btn" (click)="onLogout()">
+                    <i class="pi pi-sign-out"></i>
+                    Logout
+                </button>
+            </div>
+        </div>
     </header>
     <div class="component menu-container">
         <app-menu [player]="player">
