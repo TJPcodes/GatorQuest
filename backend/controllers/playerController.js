@@ -31,7 +31,7 @@ async function buildActionResponse(message, player) {
 
 // Helper function to increment day with each action
 function incrementDay(player) {
-  player.day = Math.min(player.day + 20, 320); // Each choice is 20 days, cap at 320
+  player.day = Math.min(player.day + 20, 400); // Each choice is 20 days, cap at 400 to allow all events
 }
 
 // Helper function to apply random event (happens every 3 choices)
@@ -79,12 +79,21 @@ export const getPlayerByName = async (req, res) => {
   res.json(player);
 };
 
-// STUDY
+// UPDATE PLAYER (for saving story progress)
+export const updatePlayer = async (req, res) => {
+  const player = await Player.findByIdAndUpdate(req.params.id, req.body, { new: true });
+  if (!player) return res.status(404).json({ error: "Player not found" });
+  res.json(player);
+};
+
+// STUDY ACTION
 export const study = async (req, res) => {
   const player = await Player.findById(req.params.id);
   if (!player) return res.status(404).json({ error: "Player not found" });
 
+  console.log(`study action: player.day BEFORE increment = ${player.day}`);
   incrementDay(player);
+  console.log(`study action: player.day AFTER increment = ${player.day}`);
   player.energy = clamp(player.energy - 12, 0, 100);
   player.gpa = clamp(parseFloat((player.gpa + 0.04).toFixed(2)), 0, 4.0);
 

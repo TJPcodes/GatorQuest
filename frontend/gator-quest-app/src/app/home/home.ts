@@ -43,7 +43,14 @@ export class Home implements OnInit {
       const res = await fetch(`http://localhost:5000/api/players/byName/${playerName}`);
       const data = await res.json();
       this.player = data;
+      // Load saved story progress
+      this.storyIndex = data.currentStoryIndex || 0;
+      this.storiesCompleted = data.storiesCompleted || false;
+      // Set the current story based on saved index
+      this.currentStory = storyChoices[this.storyIndex] || null;
       console.log('Initial player loaded:', this.player);
+      console.log('Loaded story progress - storyIndex:', this.storyIndex, 'storiesCompleted:', this.storiesCompleted);
+      console.log('Current story:', this.currentStory);
     } catch (err) {
       console.error('Error loading player stats:', err);
     }
@@ -74,6 +81,8 @@ export class Home implements OnInit {
       console.log("Displaying random event:", this.eventMessage);
     } else {
       this.getNextStory();
+      // Save story progress AFTER advancing to next story
+      this.saveStoryProgress();
     }
     
     console.log('storyIndex now:', this.storyIndex, 'currentStory id:', this.currentStory?.id);
@@ -82,6 +91,8 @@ export class Home implements OnInit {
   onEventNext() {
     this.currentState = "game";
     this.getNextStory();
+    // Save story progress AFTER advancing from event
+    this.saveStoryProgress();
     this.eventMessage = "";
   }
 
@@ -136,6 +147,25 @@ export class Home implements OnInit {
     };
   }
 
+  async saveStoryProgress() {
+    try {
+      const playerId = localStorage.getItem('playerId');
+      const res = await fetch(`http://localhost:5000/api/players/${playerId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          currentStoryIndex: this.storyIndex,
+          storiesCompleted: this.storiesCompleted
+        })
+      });
+      if (res.ok) {
+        console.log('Story progress saved:', { storyIndex: this.storyIndex, storiesCompleted: this.storiesCompleted });
+      }
+    } catch (err) {
+      console.error('Error saving story progress:', err);
+    }
+  }
+
   handleGameOver(message: string, status: string) {
     this.currentState = "gameover";
     this.gameOverMessage = message;
@@ -149,13 +179,25 @@ export class Home implements OnInit {
 
   onStart(){
     this.currentState = "game";
-    this.storiesCompleted = false;  // Reset stories completed flag
-    this.storyIndex = -1;  // Reset to -1 so first story will be at index 0
-    this.resetPlayerStats();
-    this.resetPlayerOnBackend();  // Reset player data in backend
-    const startIndex = storyChoices.findIndex(story => story.id === "freshman1");
-    this.storyIndex = startIndex >= 0 ? startIndex : 0;
-    this.currentStory = storyChoices[this.storyIndex] || null;
+    
+    // Check if this is restarting after game over or continuing mid-game
+    if (this.gameStatus === "graduated" || this.gameStatus === "failed") {
+      // Game over - start fresh
+      this.storiesCompleted = false;
+      this.storyIndex = -1;  // Will advance to 0 below
+      this.resetPlayerStats();
+      this.resetPlayerOnBackend();
+      this.gameOverMessage = "";
+      this.gameStatus = "";
+      console.log("Starting fresh game");
+      // Advance to first story
+      this.getNextStory();
+    } else {
+      // Continuing mid-game - already loaded from database
+      console.log("Continuing game from story index:", this.storyIndex);
+      this.currentStory = storyChoices[this.storyIndex] || null;
+    }
+    
     console.log("Switch to game state");
     console.log("Current story:", this.currentStory);
   }

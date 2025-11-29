@@ -11,7 +11,8 @@ import {
   attendEvent,
   visitLocation,
   nextDay,
-  getPlayerByName
+  getPlayerByName,
+  updatePlayer
 } from "../controllers/playerController.js";
 
 const router = express.Router();
@@ -19,6 +20,7 @@ const router = express.Router();
 router.get("/", getPlayers);
 router.post("/", createPlayer);
 router.get("/byName/:name", getPlayerByName);
+router.patch("/:id", updatePlayer);
 router.put("/:id/study", study);
 router.put("/:id/eat", eat);
 router.put("/:id/rest", rest);

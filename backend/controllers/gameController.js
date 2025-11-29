@@ -79,6 +79,8 @@ export const resetGame = async (req, res) => {
   player.social = 50;
   player.money = 50;
   player.location = "Reitz Union";
+  player.currentStoryIndex = 0;
+  player.storiesCompleted = false;
 
   await player.save();
   res.json({ message: "Game reset successful.", player });

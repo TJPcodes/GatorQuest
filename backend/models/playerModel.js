@@ -13,6 +13,10 @@ const playerSchema = new mongoose.Schema({
 
   money: { type: Number, default: 50 },    
   day: { type: Number, default: 1 },  
+  
+  // Story progress tracking
+  currentStoryIndex: { type: Number, default: 0 },
+  storiesCompleted: { type: Boolean, default: false },
 
   lastUpdated: { type: Date, default: Date.now },
 
