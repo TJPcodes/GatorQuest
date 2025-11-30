@@ -5,11 +5,17 @@ import User from "../models/userModel.js";
 
 dotenv.config();
 
+// Secret used for signing JWT tokens (fallback prevents crashes in dev)
 const JWT_SECRET = process.env.JWT_SECRET || "replace_this_with_a_real_secret";
+
+// USER REGISTRATION
+// Creates a new account with a secure hashed password.
+// Validates strong password rules and prevents duplicate accounts.
 export const register = async (req, res) => {
   try {
     const { email, password } = req.body;
 
+    // Basic field validation
     if (!email || !password) {
       return res.status(400).json({
         message: "Please provide both an username and a password to register.",
@@ -33,6 +39,7 @@ export const register = async (req, res) => {
       });
     }
 
+    // Prevent duplicate accounts by checking existing email
     const existing = await User.findOne({ email });
     if (existing) {
       return res.status(409).json({
@@ -40,9 +47,11 @@ export const register = async (req, res) => {
       });
     }
 
+    // Hashing the user's password for secure storage
     const salt = await bcrypt.genSalt(10);
     const passwordHash = await bcrypt.hash(password, salt);
 
+    // Create the user document
     const user = new User({ email, passwordHash });
     await user.save();
 
@@ -58,16 +67,22 @@ export const register = async (req, res) => {
   }
 };
 
+
+//USER LOGIN
+// Authenticates a user using bcrypt and returns a signed JWT.
+// The JWT includes role + ID and lasts for 7 days.
 export const login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
+    // Validate required fields
     if (!email || !password) {
       return res.status(400).json({
         message: "Please enter both your username and password.",
       });
     }
 
+    // Lookup user account
     const user = await User.findOne({ email });
     if (!user) {
       return res.status(401).json({
@@ -75,6 +90,7 @@ export const login = async (req, res) => {
       });
     }
 
+    // Compare raw password to stored bcrypt hash
     const isMatch = await bcrypt.compare(password, user.passwordHash);
     if (!isMatch) {
       return res.status(401).json({
@@ -82,7 +98,9 @@ export const login = async (req, res) => {
       });
     }
 
+    // JWT payload stores key identity + authorization info
     const payload = { sub: user._id, email: user.email, role: user.role };
+    // Issue a long-lived authentication token (7 days)
     const token = jwt.sign(payload, JWT_SECRET, { expiresIn: "7d" });
 
     return res.status(200).json({
