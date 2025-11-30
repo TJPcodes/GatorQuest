@@ -17,6 +17,7 @@ const playerSchema = new mongoose.Schema({
   // Story progress tracking
   currentStoryIndex: { type: Number, default: 0 },
   storiesCompleted: { type: Boolean, default: false },
+  gamesPlayed: { type: Number, default: 0 }, // Track how many times player has finished/restarted
 
   lastUpdated: { type: Date, default: Date.now },
 

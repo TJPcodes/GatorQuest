@@ -73,6 +73,11 @@ export const resetGame = async (req, res) => {
   const player = await Player.findById(req.params.id);
   if (!player) return res.status(404).json({ error: "Player not found" });
 
+  // Increment games played if this is a restart (not first time)
+  if (player.storiesCompleted || player.currentStoryIndex > 0) {
+    player.gamesPlayed = (player.gamesPlayed || 0) + 1;
+  }
+
   player.day = 1;
   player.gpa = 2.5;
   player.energy = 100;

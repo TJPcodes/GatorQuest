@@ -26,12 +26,15 @@ export class Admin implements OnInit {
   async loadPlayers() {
     try {
       this.loading = true;
+      this.error = '';
       const token = localStorage.getItem('token');
       const res = await fetch('http://localhost:5000/admin/players', {
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: { 'Authorization': `Bearer ${token}` },
+        cache: 'no-store' // Force fresh data from server
       });
       if (res.ok) {
         this.players = await res.json();
+        console.log('Players refreshed:', this.players);
       } else {
         this.error = 'Failed to load players';
       }
@@ -47,10 +50,12 @@ export class Admin implements OnInit {
     try {
       const token = localStorage.getItem('token');
       const res = await fetch('http://localhost:5000/admin/users', {
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: { 'Authorization': `Bearer ${token}` },
+        cache: 'no-store' // Force fresh data from server
       });
       if (res.ok) {
         this.users = await res.json();
+        console.log('Users refreshed:', this.users);
       }
     } catch (err) {
       console.error('Error loading users:', err);
@@ -94,5 +99,13 @@ export class Admin implements OnInit {
     localStorage.removeItem('playerId');
     localStorage.removeItem('playerName');
     this.router.navigate(['/login']);
+  }
+
+  refreshPlayers() {
+    this.loadPlayers();
+  }
+
+  refreshUsers() {
+    this.loadUsers();
   }
 }

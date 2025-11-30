@@ -26,7 +26,12 @@
 
   <!-- Players Tab -->
   <div *ngIf="activeTab === 'players' && !loading" class="content">
-    <h2>All Players</h2>
+    <div class="content-header">
+      <h2>All Players</h2>
+      <button class="refresh-btn" (click)="refreshPlayers()" title="Refresh player data">
+        <i class="pi pi-refresh"></i> Refresh
+      </button>
+    </div>
     <table class="data-table">
       <thead>
         <tr>
@@ -34,7 +39,9 @@
           <th>GPA</th>
           <th>Energy</th>
           <th>Social</th>
-          <th>Day</th>
+          <th>Story Progress</th>
+          <th>Games Played</th>
+          <th>Status</th>
           <th>Actions</th>
         </tr>
       </thead>
@@ -44,7 +51,13 @@
           <td>{{ player.gpa?.toFixed(2) }}</td>
           <td>{{ player.energy }}</td>
           <td>{{ player.social }}</td>
-          <td>{{ player.day }}</td>
+          <td>{{ player.currentStoryIndex }} / 20</td>
+          <td>{{ player.gamesPlayed || 0 }}</td>
+          <td>
+            <span class="status-badge" [class.completed]="player.storiesCompleted">
+              {{ player.storiesCompleted ? 'Completed' : 'In Progress' }}
+            </span>
+          </td>
           <td>
             <button class="delete-btn" (click)="deletePlayer(player._id)">
               <i class="pi pi-trash"></i>
@@ -57,7 +70,12 @@
 
   <!-- Users Tab -->
   <div *ngIf="activeTab === 'users' && !loading" class="content">
-    <h2>All Users</h2>
+    <div class="content-header">
+      <h2>All Users</h2>
+      <button class="refresh-btn" (click)="refreshUsers()" title="Refresh user data">
+        <i class="pi pi-refresh"></i> Refresh
+      </button>
+    </div>
     <table class="data-table">
       <thead>
         <tr>

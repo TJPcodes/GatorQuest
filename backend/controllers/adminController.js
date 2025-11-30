@@ -19,10 +19,18 @@ export const adminUpdatePlayer = async (req, res) => {
 export const adminDeletePlayer = async (req, res) => {
   const { id } = req.params;
 
-  const player = await Player.findByIdAndDelete(id);
+  const player = await Player.findById(id);
   if (!player) return res.status(404).json({ message: "Player not found" });
 
-  res.json({ message: "Player deleted" });
+  // Delete the associated user account first (if userId exists)
+  if (player.userId) {
+    await User.findByIdAndDelete(player.userId);
+  }
+
+  // Then delete the player
+  await Player.findByIdAndDelete(id);
+
+  res.json({ message: "Player and associated user deleted" });
 };
 
 
