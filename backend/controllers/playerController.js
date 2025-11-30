@@ -4,8 +4,8 @@ import { yearPrompts, randomDailyEvents } from "../utils/storyEvents.js";
 import { checkGameEnd } from "./gameController.js";
 
 
-const PENALTY_THRESHOLD = 50;
-const PENALTY_DELTA = 0.1;  
+const PENALTY_THRESHOLD = 30;
+const PENALTY_DELTA = 0.05;  
 
 // Utility clamp
 function clamp(value, min, max) {
@@ -97,8 +97,22 @@ export const getPlayerByName = async (req, res) => {
 
 // UPDATE PLAYER (for saving story progress)
 export const updatePlayer = async (req, res) => {
-  const player = await Player.findByIdAndUpdate(req.params.id, req.body, { new: true });
+  const player = await Player.findById(req.params.id);
   if (!player) return res.status(404).json({ error: "Player not found" });
+  
+  // Only update fields that are explicitly provided in req.body
+  // This prevents accidentally overwriting fields like gamesPlayed
+  if (req.body.currentStoryIndex !== undefined) player.currentStoryIndex = req.body.currentStoryIndex;
+  if (req.body.storiesCompleted !== undefined) player.storiesCompleted = req.body.storiesCompleted;
+  if (req.body.name !== undefined) player.name = req.body.name;
+  if (req.body.gpa !== undefined) player.gpa = req.body.gpa;
+  if (req.body.energy !== undefined) player.energy = req.body.energy;
+  if (req.body.social !== undefined) player.social = req.body.social;
+  if (req.body.money !== undefined) player.money = req.body.money;
+  if (req.body.day !== undefined) player.day = req.body.day;
+  if (req.body.location !== undefined) player.location = req.body.location;
+  
+  await player.save();
   res.json(player);
 };
 
@@ -111,7 +125,7 @@ export const study = async (req, res) => {
   incrementDay(player);
   console.log(`study action: player.day AFTER increment = ${player.day}`);
   player.energy = clamp(player.energy - 8, 0, 100);
-  const gpaGain = 0.06 * (player.energy + player.social) / 200;
+  const gpaGain = 0.20 + (0.15 * (player.energy + player.social) / 200);
   player.gpa = clamp(parseFloat((player.gpa + gpaGain).toFixed(2)), 0, 4.0);
 
   await player.save();
@@ -154,7 +168,7 @@ export const party = async (req, res) => {
   const socialGainParty = 12 * (100 - player.social) / 100;
   player.social = clamp(player.social + Math.round(socialGainParty), 0, 100);
 
-  if (Math.random() < 0.35) {
+  if (Math.random() < 0.20) {
     player.gpa = clamp(parseFloat((player.gpa - 0.05).toFixed(2)), 0, 4.0);
   }
 
@@ -184,7 +198,7 @@ export const attendClass = async (req, res) => {
 
   incrementDay(player);
   player.energy = clamp(player.energy - 6, 0, 100);
-  const gpaGain = 0.08 * (player.energy + player.social) / 200;
+  const gpaGain = 0.18 + (0.12 * (player.energy + player.social) / 200);
   player.gpa = clamp(parseFloat((player.gpa + gpaGain).toFixed(2)), 0, 4.0);
   await player.save();
   const response = await buildActionResponse("You attended class and learned something useful.", player);
