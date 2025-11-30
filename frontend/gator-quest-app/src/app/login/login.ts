@@ -33,19 +33,27 @@ export class Login {
         alert(res.message || 'Login successful!');
         localStorage.setItem('loggedIn', 'true');
         localStorage.setItem('playerName', this.username);
+        localStorage.setItem('token', res.token);
         const username = res.user.email;
-        console.log(username)
+        const role = res.user.role;
         console.log('User logged in:', res);
-        this.http.get(`http://localhost:5000/api/players/byName/${username}`)
-          .subscribe({
-            next: (player: any) => {
-              localStorage.setItem('playerId', player._id); 
-              this.router.navigate(['/home']);
-            },
-            error: (err) => {
-              console.error('Failed to fetch player:', err);
-            }
-          });
+
+        // Route based on role
+        if (role === 'admin') {
+          this.router.navigate(['/admin']);
+        } else {
+          // Fetch player for regular users
+          this.http.get(`http://localhost:5000/api/players/byName/${username}`)
+            .subscribe({
+              next: (player: any) => {
+                localStorage.setItem('playerId', player._id); 
+                this.router.navigate(['/home']);
+              },
+              error: (err) => {
+                console.error('Failed to fetch player:', err);
+              }
+            });
+        }
       },
       error: (err) => {
         const backendMsg = err.error?.message || 'Login failed. Please try again.';
