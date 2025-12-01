@@ -30,36 +30,22 @@ export class Login {
   this.http.post('http://localhost:5000/api/users/login', creds)
     .subscribe({
       next: (res: any) => {
+        alert(res.message || 'Login successful!');
         localStorage.setItem('loggedIn', 'true');
         localStorage.setItem('playerName', this.username);
-        localStorage.setItem('token', res.token);
         const username = res.user.email;
-        const role = res.user.role;
+        console.log(username)
         console.log('User logged in:', res);
-
-        // Route based on role
-        if (role === 'admin') {
-          alert(res.message || 'Login successful!');
-          this.router.navigate(['/admin']);
-        } else {
-          // Fetch player for regular users
-          this.http.get(`http://localhost:5000/api/players/byName/${username}`)
-            .subscribe({
-              next: (player: any) => {
-                localStorage.setItem('playerId', player._id);
-                alert(res.message || 'Login successful!');
-                this.router.navigate(['/home']);
-              },
-              error: (err) => {
-                console.error('Failed to fetch player:', err);
-                alert('We couldn\'t find an account with that username.');
-                // Clear login data
-                localStorage.removeItem('loggedIn');
-                localStorage.removeItem('playerName');
-                localStorage.removeItem('token');
-              }
-            });
-        }
+        this.http.get(`http://localhost:5000/api/players/byName/${username}`)
+          .subscribe({
+            next: (player: any) => {
+              localStorage.setItem('playerId', player._id); 
+              this.router.navigate(['/home']);
+            },
+            error: (err) => {
+              console.error('Failed to fetch player:', err);
+            }
+          });
       },
       error: (err) => {
         const backendMsg = err.error?.message || 'Login failed. Please try again.';
