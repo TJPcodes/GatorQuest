@@ -1,10 +1,77 @@
 import Player from "../models/playerModel.js";
 import Location from "../models/locationmodel.js";
 import { yearPrompts, randomDailyEvents } from "../utils/storyEvents.js";
+import { checkGameEnd } from "./gameController.js";
+
+
+const PENALTY_THRESHOLD = 30;
+const PENALTY_DELTA = 0.05;  
 
 // Utility clamp
 function clamp(value, min, max) {
   return Math.max(min, Math.min(max, value));
+}
+
+// Helper function to check game end and add to response
+async function buildActionResponse(message, player) {
+  // Check if this is the 3rd choice (every 60 days since start)
+  // Day starts at 1, so: 61, 121, 181, 241, 301
+  let eventMessage = "";
+  const daysSinceStart = player.day - 1;
+  console.log(`buildActionResponse: player.day=${player.day}, daysSinceStart=${daysSinceStart}, daysSinceStart % 60 = ${daysSinceStart % 60}`);
+  
+  if (daysSinceStart > 0 && daysSinceStart % 60 === 0) {
+    console.log("Random event triggered!");
+    eventMessage = applyRandomEvent(player);
+  }
+
+  
+  let dailyPenalty = false;
+  if (player.energy < PENALTY_THRESHOLD || player.social < PENALTY_THRESHOLD) {
+    player.gpa = clamp(parseFloat((player.gpa - PENALTY_DELTA).toFixed(2)), 0, 4.0);
+    dailyPenalty = true;
+  }
+
+  if (eventMessage || dailyPenalty) {
+    await player.save();
+  }
+
+  const response = {
+    message: message + eventMessage,
+    dailyPenalty,
+    player
+  };
+
+  return response;
+}
+
+// Helper function to increment day with each action
+function incrementDay(player) {
+  player.day = Math.min(player.day + 20, 400); // Each choice is 20 days, cap at 400 to allow all events
+}
+
+// Helper function to apply random event (happens every 3 choices)
+function applyRandomEvent(player) {
+  const roll = Math.random();
+  let eventMessage = "";
+  
+  if (roll < 0.2) {
+    player.gpa = clamp(parseFloat((player.gpa + 0.05).toFixed(2)), 0, 4.0);
+    eventMessage = " [Random event: You had a productive study week!]";
+  } else if (roll < 0.4) {
+    player.social = clamp(player.social + 10, 0, 100);
+    eventMessage = " [Random event: You met new people!]";
+  } else if (roll < 0.5) {
+    player.gpa = clamp(parseFloat((player.gpa - 0.10).toFixed(2)), 0, 4.0);
+    eventMessage = " [Random event: You missed an important assignment deadline!]";
+  } else if (roll < 0.6) {
+    player.energy = clamp(player.energy - 20, 0, 100);
+    eventMessage = " [Random event: You stayed up late!]";
+  } else {
+    eventMessage = " [Random event: Normal week.]";
+  }
+  
+  return eventMessage;
 }
 
 // GET ALL PLAYERS
@@ -28,16 +95,42 @@ export const getPlayerByName = async (req, res) => {
   res.json(player);
 };
 
-// STUDY
+// UPDATE PLAYER (for saving story progress)
+export const updatePlayer = async (req, res) => {
+  const player = await Player.findById(req.params.id);
+  if (!player) return res.status(404).json({ error: "Player not found" });
+  
+  // Only update fields that are explicitly provided in req.body
+  // This prevents accidentally overwriting fields like gamesPlayed
+  if (req.body.currentStoryIndex !== undefined) player.currentStoryIndex = req.body.currentStoryIndex;
+  if (req.body.storiesCompleted !== undefined) player.storiesCompleted = req.body.storiesCompleted;
+  if (req.body.name !== undefined) player.name = req.body.name;
+  if (req.body.gpa !== undefined) player.gpa = req.body.gpa;
+  if (req.body.energy !== undefined) player.energy = req.body.energy;
+  if (req.body.social !== undefined) player.social = req.body.social;
+  if (req.body.money !== undefined) player.money = req.body.money;
+  if (req.body.day !== undefined) player.day = req.body.day;
+  if (req.body.location !== undefined) player.location = req.body.location;
+  
+  await player.save();
+  res.json(player);
+};
+
+// STUDY ACTION
 export const study = async (req, res) => {
   const player = await Player.findById(req.params.id);
   if (!player) return res.status(404).json({ error: "Player not found" });
 
-  player.energy = clamp(player.energy - 12, 0, 100);
-  player.gpa = clamp(parseFloat((player.gpa + 0.04).toFixed(2)), 0, 4.0);
+  console.log(`study action: player.day BEFORE increment = ${player.day}`);
+  incrementDay(player);
+  console.log(`study action: player.day AFTER increment = ${player.day}`);
+  player.energy = clamp(player.energy - 8, 0, 100);
+  const gpaGain = 0.20 + (0.15 * (player.energy + player.social) / 200);
+  player.gpa = clamp(parseFloat((player.gpa + gpaGain).toFixed(2)), 0, 4.0);
 
   await player.save();
-  res.json({ message: "You studied and improved your GPA slightly.", player });
+  const response = await buildActionResponse("You studied and improved your GPA slightly.", player);
+  return res.json(response);
 };
 
 // EAT
@@ -45,10 +138,11 @@ export const eat = async (req, res) => {
   const player = await Player.findById(req.params.id);
   if (!player) return res.status(404).json({ error: "Player not found" });
 
+  incrementDay(player);
   player.energy = clamp(player.energy + 20, 0, 100);
   await player.save();
-
-  res.json({ message: "You grabbed some food and restored energy.", player });
+  const response = await buildActionResponse("You grabbed some food and restored energy.", player);
+  return res.json(response);
 };
 
 // REST
@@ -56,10 +150,12 @@ export const rest = async (req, res) => {
   const player = await Player.findById(req.params.id);
   if (!player) return res.status(404).json({ error: "Player not found" });
 
-  player.energy = clamp(player.energy + 30, 0, 100);
+  incrementDay(player);
+  const restGain = 30 * (100 - player.energy) / 100; 
+  player.energy = clamp(player.energy + Math.round(restGain), 0, 100);
   await player.save();
-
-  res.json({ message: "You rested and regained energy.", player });
+  const response = await buildActionResponse("You rested and regained energy.", player);
+  return res.json(response);
 };
 
 // PARTY
@@ -67,15 +163,18 @@ export const party = async (req, res) => {
   const player = await Player.findById(req.params.id);
   if (!player) return res.status(404).json({ error: "Player not found" });
 
-  player.energy = clamp(player.energy - 20, 0, 100);
-  player.social = clamp(player.social + 12, 0, 100);
+  incrementDay(player);
+  player.energy = clamp(player.energy - 15, 0, 100);
+  const socialGainParty = 12 * (100 - player.social) / 100;
+  player.social = clamp(player.social + Math.round(socialGainParty), 0, 100);
 
-  if (Math.random() < 0.35) {
+  if (Math.random() < 0.20) {
     player.gpa = clamp(parseFloat((player.gpa - 0.05).toFixed(2)), 0, 4.0);
   }
 
   await player.save();
-  res.json({ message: "You went out and improved your social life.", player });
+  const response = await buildActionResponse("You went out and improved your social life.", player);
+  return res.json(response);
 };
 
 // WORKOUT
@@ -83,11 +182,13 @@ export const workout = async (req, res) => {
   const player = await Player.findById(req.params.id);
   if (!player) return res.status(404).json({ error: "Player not found" });
 
-  player.energy = clamp(player.energy - 15, 0, 100);
+  incrementDay(player);
+  player.energy = clamp(player.energy - 10, 0, 100);
   player.social = clamp(player.social + 5, 0, 100);
 
   await player.save();
-  res.json({ message: "You worked out and feel more focused.", player });
+  const response = await buildActionResponse("You worked out and feel more focused.", player);
+  return res.json(response);
 };
 
 // ATTEND CLASS
@@ -95,11 +196,13 @@ export const attendClass = async (req, res) => {
   const player = await Player.findById(req.params.id);
   if (!player) return res.status(404).json({ error: "Player not found" });
 
-  player.energy = clamp(player.energy - 10, 0, 100);
-  player.gpa = clamp(parseFloat((player.gpa + 0.05).toFixed(2)), 0, 4.0);
-
+  incrementDay(player);
+  player.energy = clamp(player.energy - 6, 0, 100);
+  const gpaGain = 0.18 + (0.12 * (player.energy + player.social) / 200);
+  player.gpa = clamp(parseFloat((player.gpa + gpaGain).toFixed(2)), 0, 4.0);
   await player.save();
-  res.json({ message: "You attended class and learned something useful.", player });
+  const response = await buildActionResponse("You attended class and learned something useful.", player);
+  return res.json(response);
 };
 
 // ATTEND EVENT
@@ -107,11 +210,14 @@ export const attendEvent = async (req, res) => {
   const player = await Player.findById(req.params.id);
   if (!player) return res.status(404).json({ error: "Player not found" });
 
-  player.energy = clamp(player.energy - 10, 0, 100);
-  player.social = clamp(player.social + 15, 0, 100);
+  incrementDay(player);
+  player.energy = clamp(player.energy - 6, 0, 100);
+  const socialGainEvent = 15 * (100 - player.social) / 100;
+  player.social = clamp(player.social + Math.round(socialGainEvent), 0, 100);
 
   await player.save();
-  res.json({ message: "You attended an event and met new people.", player });
+  const response = await buildActionResponse("You attended an event and met new people.", player);
+  return res.json(response);
 };
 
 // NEXT DAY (main loop)
@@ -142,6 +248,13 @@ export const nextDay = async (req, res) => {
     if (event.social) player.social = clamp(player.social + event.social, 0, 100);
   }
 
+  
+  let dailyPenalty = false;
+  if (player.energy < 50 || player.social < 50) {
+    player.gpa = clamp(parseFloat((player.gpa - 0.10).toFixed(2)), 0, 4.0);
+    dailyPenalty = true;
+  }
+
   await player.save();
 
   // Fail-out
@@ -161,6 +274,7 @@ export const nextDay = async (req, res) => {
     message: `A new day begins at UF... Day ${player.day}`,
     storyLine,
     event,
+    dailyPenalty,
     player
   });
 };
@@ -195,14 +309,16 @@ export const visitLocation = async (req, res) => {
   const location = await Location.findOne({ name: locationName });
   if (!location) return res.status(404).json({ error: "Unknown location" });
 
+  incrementDay(player);
   player.gpa = clamp(player.gpa + location.gpaEffect, 0, 4.0);
   player.energy = clamp(player.energy + location.energyEffect, 0, 100);
   player.social = clamp(player.social + location.socialEffect, 0, 100);
 
   player.location = location.name;
   await player.save();
-
-  res.json({ message: `Visited ${location.name}`, effects: location, player });
+  const response = await buildActionResponse(`Visited ${location.name}`, player);
+  response.effects = location;
+  res.json(response);
 };
 
 

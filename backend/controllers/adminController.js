@@ -2,53 +2,42 @@ import Player from "../models/playerModel.js";
 import User from "../models/userModel.js";
 
 
-// ADMIN: Fetch all player documents
-// Returns a full list of all Player objects in the DB
-
 export const adminGetAllPlayers = async (req, res) => {
   const players = await Player.find();
   res.json(players);
 };
 
-
-// ADMIN: Update a specific player by ID
-// Accepts any fields in req.body and applies them to the Player document
-
 export const adminUpdatePlayer = async (req, res) => {
   const { id } = req.params;
 
-  // Find the player by ID and apply updates
   const player = await Player.findByIdAndUpdate(id, req.body, { new: true });
-
-  // If the player does not exist, return an error
   if (!player) return res.status(404).json({ message: "Player not found" });
 
   res.json({ message: "Player updated", player });
 };
 
-// ADMIN: Delete a specific player by ID
-// Permanently removes the Player document from the database
-
 export const adminDeletePlayer = async (req, res) => {
   const { id } = req.params;
 
-  const player = await Player.findByIdAndDelete(id);
+  const player = await Player.findById(id);
   if (!player) return res.status(404).json({ message: "Player not found" });
 
-  res.json({ message: "Player deleted" });
+  // Delete the associated user account first (if userId exists)
+  if (player.userId) {
+    await User.findByIdAndDelete(player.userId);
+  }
+
+  // Then delete the player
+  await Player.findByIdAndDelete(id);
+
+  res.json({ message: "Player and associated user deleted" });
 };
 
-
-// ADMIN: Fetch all user accounts
-// Password hashes are excluded for safety/security
 
 export const adminGetAllUsers = async (req, res) => {
   const users = await User.find().select("-passwordHash"); 
   res.json(users);
 };
-
-// ADMIN: Update a specific user by ID
-// Applies updates from req.body while ensuring the password hash is not returned
 
 export const adminUpdateUser = async (req, res) => {
   const { id } = req.params;
@@ -58,10 +47,6 @@ export const adminUpdateUser = async (req, res) => {
 
   res.json({ message: "User updated", user });
 };
-
-
-// ADMIN: Delete a specific user account by ID
-// Permanently removes the User document
 
 export const adminDeleteUser = async (req, res) => {
   const { id } = req.params;

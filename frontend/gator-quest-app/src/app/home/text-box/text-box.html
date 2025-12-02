@@ -1,5 +1,16 @@
 <div class="component-background">
-    <div class="user-text">
-        <input type="text" pInputText [(ngModel)]="userInput" placeholder="Enter Command" class="user-text-box" (keyup.enter)="sendCommand()" />
+    <div *ngIf="!currentStory" class="start-container">
+        <p class="story-text">{{ storyContent }}</p>
+        <button class="start-button" (click)="requestStart()">Start Game</button>
+    </div>
+    <div *ngIf="currentStory">
+      <div class="story-content">
+          <p class="story-text">{{ storyContent }}</p>
+      </div>
+      <div class="choices-container">
+          <button *ngFor="let choice of choices" class="choice-button" (click)="selectChoice(choice.action)">
+              {{ choice.label }}
+          </button>
+      </div>
     </div>
 </div>
